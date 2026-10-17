@@ -1,0 +1,38 @@
+name: Deploy site
+
+# WHEN: every push to main, plus a manual "Run workflow" button
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# GitHub Pages needs these permissions to publish
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    # WHERE: a fresh Ubuntu VM for every run
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # WHAT: steps run top to bottom; any failure stops the run
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the site
+        run: test -f index.html && echo "index.html found"
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
